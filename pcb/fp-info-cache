@@ -1,4 +1,4 @@
-22334835876813294
+22338230171106151
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -92344,9 +92344,23 @@ varistor
 2
 2
 vfd
-Crystal_DS26_D2.0mm_L6.0mm_Horizontal_SMT
+Crystal_DS26_D2.0mm_L6.0mm_Horizontal_Grounded_SMT
 Crystal THT DS26 6.0mm length 2.0mm diameter http://www.microcrystal.com/images/_Product-Documentation/03_TF_metal_Packages/01_Datasheet/DS-Series.pdf
+['DS26']
+0
+3
+3
+vfd
+Crystal_DS26_D2.0mm_L6.0mm_Horizontal_SMT
+Crystal SMD DS26 6.0mm length 2.0mm diameter http://www.microcrystal.com/images/_Product-Documentation/03_TF_metal_Packages/01_Datasheet/DS-Series.pdf
 ['DS26']
 0
 2
 2
+vfd
+IV-18
+
+
+0
+22
+22
