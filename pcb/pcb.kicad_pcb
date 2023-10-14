@@ -4599,6 +4599,9 @@
     (stroke (width 0.1) (type default)) (layer "Edge.Cuts") (tstamp e8716e13-6cbe-4063-b257-af8c7b857639))
   (gr_line (start 125.095 158.75) (end 125.095 168.275)
     (stroke (width 0.1) (type default)) (layer "Edge.Cuts") (tstamp f0179523-9f2e-43e7-8a50-210bf5a1a632))
+  (gr_text "C(L)OCK		R1.0	ZENO GRIES" (at 151.765 34.925 90) (layer "F.SilkS") (tstamp 609e21ad-051a-4a70-913a-2472d2fc69f4)
+    (effects (font (size 1 1) (thickness 0.15)) (justify right bottom))
+  )
 
   (segment (start 135.400524 139.8452) (end 130.2575 144.988224) (width 0.2032) (layer "F.Cu") (net 1) (tstamp 24628824-73fa-455c-b931-d182010e0935))
   (segment (start 144.7252 114.2452) (end 151.13 120.65) (width 0.2032) (layer "F.Cu") (net 1) (tstamp 2a9ddd28-0a01-47d2-afca-d7e838f98f7e))
