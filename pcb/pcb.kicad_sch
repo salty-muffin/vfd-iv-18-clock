@@ -517,6 +517,73 @@
         )
       )
     )
+    (symbol "Device:D" (pin_numbers hide) (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
+      (property "Reference" "D" (at 0 2.54 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Value" "D" (at 0 -2.54 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Footprint" "" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Datasheet" "~" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Sim.Device" "D" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Sim.Pins" "1=K 2=A" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_keywords" "diode" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_description" "Diode" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_fp_filters" "TO-???* *_Diode_* *SingleDiode* D_*" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (symbol "D_0_1"
+        (polyline
+          (pts
+            (xy -1.27 1.27)
+            (xy -1.27 -1.27)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 1.27 0)
+            (xy -1.27 0)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 1.27 1.27)
+            (xy 1.27 -1.27)
+            (xy -1.27 0)
+            (xy 1.27 1.27)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "D_1_1"
+        (pin passive line (at -3.81 0 0) (length 2.54)
+          (name "K" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 3.81 0 180) (length 2.54)
+          (name "A" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
     (symbol "Device:D_Schottky" (pin_numbers hide) (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
       (property "Reference" "D" (at 0 2.54 0)
         (effects (font (size 1.27 1.27)))
@@ -4368,7 +4435,7 @@
   (symbol (lib_id "power:+5VA") (at 297.18 237.49 180) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 0b84b67b-864f-4936-b95f-efaac347b4dc)
-    (property "Reference" "#PWR022" (at 297.18 233.68 0)
+    (property "Reference" "#PWR023" (at 297.18 233.68 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5VA" (at 297.18 242.57 90)
@@ -4384,7 +4451,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR022") (unit 1)
+          (reference "#PWR023") (unit 1)
         )
       )
     )
@@ -4633,7 +4700,7 @@
   (symbol (lib_id "power:+5V") (at 284.48 142.24 180) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 4334508a-af1a-49c4-8ccc-dab04455212d)
-    (property "Reference" "#PWR013" (at 284.48 138.43 0)
+    (property "Reference" "#PWR014" (at 284.48 138.43 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (at 284.48 147.32 90)
@@ -4649,7 +4716,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR013") (unit 1)
+          (reference "#PWR014") (unit 1)
         )
       )
     )
@@ -4675,6 +4742,38 @@
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
           (reference "#PWR05") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Device:D") (at 196.85 36.83 180) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 4c21db86-89dd-4f10-930a-7e9e6f44323f)
+    (property "Reference" "D2" (at 196.85 30.48 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "FM4004-W" (at 196.85 33.02 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Diode_SMD:D_SMA_Handsoldering" (at 196.85 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 196.85 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Sim.Device" "D" (at 196.85 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Sim.Pins" "1=K 2=A" (at 196.85 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 794eaae9-96e9-48bf-832d-6e464bd873dc))
+    (pin "2" (uuid 62b27d5c-3a1e-486d-a02f-dfa7a43ecd92))
+    (instances
+      (project "pcb"
+        (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
+          (reference "D2") (unit 1)
         )
       )
     )
@@ -4954,7 +5053,7 @@
   (symbol (lib_id "power:+3.3V") (at 281.94 142.24 180) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 78903a5f-a12e-45d5-9836-daa2040b66c9)
-    (property "Reference" "#PWR015" (at 281.94 138.43 0)
+    (property "Reference" "#PWR013" (at 281.94 138.43 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3V" (at 281.94 147.32 90)
@@ -4970,7 +5069,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR015") (unit 1)
+          (reference "#PWR013") (unit 1)
         )
       )
     )
@@ -5055,7 +5154,7 @@
   (symbol (lib_id "power:+3.3VA") (at 294.64 237.49 180) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 88be7a03-5b2c-4ecf-8195-5215ea4da89c)
-    (property "Reference" "#PWR024" (at 294.64 233.68 0)
+    (property "Reference" "#PWR022" (at 294.64 233.68 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VA" (at 294.64 240.03 90)
@@ -5071,7 +5170,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR024") (unit 1)
+          (reference "#PWR022") (unit 1)
         )
       )
     )
@@ -5240,7 +5339,7 @@
   (symbol (lib_id "power:GNDA") (at 299.72 237.49 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 97a1a88a-85e5-4a05-b7fd-117487da29e4)
-    (property "Reference" "#PWR023" (at 299.72 243.84 0)
+    (property "Reference" "#PWR024" (at 299.72 243.84 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GNDA" (at 299.72 242.57 90)
@@ -5256,7 +5355,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR023") (unit 1)
+          (reference "#PWR024") (unit 1)
         )
       )
     )
@@ -5540,7 +5639,7 @@
   (symbol (lib_id "power:GND") (at 287.02 142.24 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid b51c241d-afa2-497b-afe3-023e16fe2b98)
-    (property "Reference" "#PWR014" (at 287.02 148.59 0)
+    (property "Reference" "#PWR015" (at 287.02 148.59 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 287.02 147.32 90)
@@ -5556,7 +5655,7 @@
     (instances
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "#PWR014") (unit 1)
+          (reference "#PWR015") (unit 1)
         )
       )
     )
@@ -5931,32 +6030,6 @@
       (project "pcb"
         (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
           (reference "V1") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:D_Schottky") (at 196.85 36.83 180) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid c9d18280-f8fc-42a4-a4d0-0f39f209bae0)
-    (property "Reference" "D2" (at 197.1675 30.48 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "SDT5A60SA-13" (at 197.1675 33.02 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Diode_SMD:D_SMA_Handsoldering" (at 196.85 36.83 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 196.85 36.83 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 46413764-b159-40cd-a1b6-4dd335f24b5b))
-    (pin "2" (uuid cd155456-8816-4a1d-875f-c6134e52ab4c))
-    (instances
-      (project "pcb"
-        (path "/cd729bb6-ed7a-42cd-87a3-14a498e05023"
-          (reference "D2") (unit 1)
         )
       )
     )

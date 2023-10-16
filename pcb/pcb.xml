@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>/home/bird/git/vfd-iv-18-clock/pcb/pcb.kicad_sch</source>
-    <date>Sun Oct 15 19:12:14 2023</date>
+    <date>Mon Oct 16 13:07:27 2023</date>
     <tool>Eeschema 7.0.8</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -190,15 +190,21 @@
       <tstamps>432da2e2-ec6b-43d2-bceb-dfcf2edebc82</tstamps>
     </comp>
     <comp ref="D2">
-      <value>SDT5A60SA-13</value>
+      <value>FM4004-W</value>
       <footprint>Diode_SMD:D_SMA_Handsoldering</footprint>
-      <libsource lib="Device" part="D_Schottky" description="Schottky diode"/>
+      <fields>
+        <field name="Sim.Device">D</field>
+        <field name="Sim.Pins">1=K 2=A</field>
+      </fields>
+      <libsource lib="Device" part="D" description="Diode"/>
+      <property name="Sim.Device" value="D"/>
+      <property name="Sim.Pins" value="1=K 2=A"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="pcb.kicad_sch"/>
-      <property name="ki_description" value="Schottky diode"/>
-      <property name="ki_keywords" value="diode Schottky"/>
+      <property name="ki_description" value="Diode"/>
+      <property name="ki_keywords" value="diode"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>c9d18280-f8fc-42a4-a4d0-0f39f209bae0</tstamps>
+      <tstamps>4c21db86-89dd-4f10-930a-7e9e6f44323f</tstamps>
     </comp>
     <comp ref="D3">
       <value>SDT5A60SA-13</value>
@@ -689,6 +695,27 @@
         <pin num="1" name="1" type="passive"/>
         <pin num="2" name="2" type="passive"/>
         <pin num="3" name="3" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="D">
+      <description>Diode</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>TO-???*</fp>
+        <fp>*_Diode_*</fp>
+        <fp>*SingleDiode*</fp>
+        <fp>D_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">D</field>
+        <field name="Datasheet">~</field>
+        <field name="Sim.Device">D</field>
+        <field name="Sim.Pins">1=K 2=A</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
       </pins>
     </libpart>
     <libpart lib="Device" part="D_Schottky">
