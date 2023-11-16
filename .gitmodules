@@ -1,0 +1,3 @@
+[submodule "pico/lib/micropython-mcp7940"]
+	path = pico/lib/micropython-mcp7940
+	url = https://github.com/salty-muffin/micropython-mcp7940.git
