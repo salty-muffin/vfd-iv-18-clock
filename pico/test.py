@@ -3,6 +3,9 @@ from machine import Pin, Timer, PWM, SoftI2C
 import mcp7940
 from debouncer import Debouncer
 
+# constants
+TIME, DATE, OFF = 0, 1, 2
+
 # setup timers
 switch_timer = Timer()
 mcp_timer = Timer()
@@ -34,6 +37,10 @@ led.off()
 # functions
 def update_display(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9):
     print(c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9)
+
+
+def turn_off_display():
+    pass
 
 
 def zfill(s, l):
@@ -81,7 +88,7 @@ def date_to_display(datetime, c0=""):
 # global variables
 clock_time = mcp.time
 last_time = clock_time
-mode = "time"
+mode = TIME
 
 
 try:
@@ -100,24 +107,39 @@ try:
 
     # main loop
     while True:
-        # check switches
-        led_state = 0
-        for switch in switches:
-            if not switch.value():
-                led_state = 1
-        led.value(led_state)
+        # mode selector
+        values = [switches[i].value() for i in range(3)]
+        # switch 1
+        if not values[1] and switch_states[1]:
+            # time / date
+            print("pressed switch 2")
+            if mode == TIME:
+                mode = DATE
+                update_display(*date_to_display(clock_time))
+            elif mode == DATE:
+                mode = TIME
+                update_display(*time_to_display(clock_time))
 
-        if not switches[1].value():
-            mode = "date"
-        else:
-            mode = "time"
+        # switch 2
+        if not values[2] and switch_states[2]:
+            # on / off
+            print("pressed switch 3")
+            if mode == TIME or mode == DATE:
+                mode = OFF
+                turn_off_display()
+            elif mode == OFF:
+                mode = TIME
+
+        # set switch states (so they only trigger once per press)
+        for i in range(3):
+            switch_states[i] = values[i]
 
         # update display
         if clock_time != last_time:
             last_time = clock_time
-            if mode == "time":
+            if mode == TIME:
                 update_display(*time_to_display(clock_time))
-            elif mode == "date":
+            elif mode == DATE:
                 update_display(*date_to_display(clock_time))
 
 
