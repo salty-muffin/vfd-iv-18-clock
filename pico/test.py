@@ -1,17 +1,42 @@
+from micropython import const
 import time
-from machine import Pin, Timer, PWM, SoftI2C
+from machine import Pin, Timer, PWM, SoftI2C, SPI
 import mcp7940
 from debouncer import Debouncer
 
 # constants
-TIME, DATE, OFF = 0, 1, 2
+TIME, DATE, OFF = const(0), const(1), const(2)
+
+MAX6921 = {
+    "D1": const(1 << 7),
+    "D2": const(1 << 0),
+    "D3": const(1 << 6),
+    "D4": const(1 << 1),
+    "D5": const(1 << 5),
+    "D6": const(1 << 2),
+    "D7": const(1 << 3),
+    "D8": const(1 << 4),
+    "D9": const(1 << 8),
+    "A": const(1 << 9),
+    "B": const(1 << 11),
+    "C": const(1 << 14),
+    "D": const(1 << 15),
+    "E": const(1 << 13),
+    "F": const(1 << 12),
+    "G": const(1 << 10),
+    "DP": const(1 << 16),
+}
+BITMASK = const(16777215)
 
 # setup timers
 switch_timer = Timer()
 mcp_timer = Timer()
 
 # setup led
-led = Pin("LED", Pin.OUT)
+led = Pin("LED", Pin.OUT, value=0)
+
+# setup filament
+filament = Pin(18, Pin.OUT, value=0)
 
 # setup switches
 switches = [
@@ -22,25 +47,51 @@ switches = [
 switch_states = [1, 1, 1]
 
 # setup boost converter control
-boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=int(0.6 * 65535))  # 60 - 76 %
+boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 
 # setup rtc
 i2c = SoftI2C(sda=Pin(21), scl=Pin(20))
 mcp = mcp7940.MCP7940(i2c)
-
 mcp.start()
 
-# set led
-led.off()
+# setup MAX6921 shift register
+shift = SPI(0, baudrate=1000000, sck=Pin(6), mosi=Pin(7), miso=Pin(4))
+load = Pin(8, Pin.OUT, value=1)
+blank = Pin(9, Pin.OUT)
+
+# global variables
+clock_time = mcp.time
+last_time = clock_time
+mode = TIME
+digit = 0  # 0 - 8
+brightness = 0.6  # 60 - 76 %
 
 
 # functions
 def update_display(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9):
+    global brightness
     print(c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9)
+
+    load.off()
+    # shift.write(BITMASK.to_bytes(3, "big"))
+    load.on()
+
+    # turn on boost converter, if off
+    # boost.duty_u16(int(brightness * 65535))
+
+    # enable tube outputs, if off
+    blank.off()
 
 
 def turn_off_display():
-    pass
+    # turn off boost converter
+    boost.duty_u16(0)
+
+    # set all tube outputs low
+    blank.on()
+
+    # turn off filament
+    filament.off()
 
 
 def zfill(s, l):
@@ -83,12 +134,6 @@ def date_to_display(datetime, c0=""):
         date[0],
         date[1],
     )
-
-
-# global variables
-clock_time = mcp.time
-last_time = clock_time
-mode = TIME
 
 
 try:
