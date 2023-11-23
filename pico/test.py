@@ -26,11 +26,10 @@ MAX6921 = {
     "G": const(1 << 10),
     "DP": const(1 << 16),
 }
-BITMASK = const(16777215)
-
 # setup timers
 switch_timer = Timer()
 mcp_timer = Timer()
+display_timer = Timer()
 
 # setup led
 led = Pin("LED", Pin.OUT, value=0)
@@ -64,17 +63,48 @@ clock_time = mcp.time
 last_time = clock_time
 mode = TIME
 digit = 0  # 0 - 8
+digit_states = [0] * 9
 brightness = 0.6  # 60 - 76 %
 
 
 # functions
-def update_display(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9):
+def set_display(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9):
     global brightness
-    print(c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9)
 
-    load.off()
-    # shift.write(BITMASK.to_bytes(3, "big"))
-    load.on()
+    # debug
+    print(d0 + d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9)
+
+    # set each digit
+    for index, digit in enumerate([d0, d1, d2, d3, d4, d5, d6, d7, d8, d9]):
+        segments = []
+        if digit[0] == "-":
+            segments = ["G"]
+        elif digit[0] == "0":
+            segments = ["A", "B", "C", "D", "E", "F"]
+        elif digit[0] == "1":
+            segments = ["B", "C"]
+        elif digit[0] == "2":
+            segments = ["A", "B", "D", "E", "G"]
+        elif digit[0] == "3":
+            segments = ["A", "B", "C", "D", "G"]
+        elif digit[0] == "4":
+            segments = ["B", "C", "F", "G"]
+        elif digit[0] == "5":
+            segments = ["A", "C", "D", "F", "G"]
+        elif digit[0] == "6":
+            segments = ["A", "C", "D", "E", "F", "G"]
+        elif digit[0] == "7":
+            segments = ["A", "B", "C"]
+        elif digit[0] == "8":
+            segments = ["A", "B", "C", "D", "E", "F", "G"]
+        elif digit[0] == "9":
+            segments = ["A", "B", "C", "D", "F", "G"]
+        if "." in digit:
+            segments += "DP"
+
+        digit_states[index] = MAX6921[f"D{index + 1}"]
+        for segment in segments:
+            digit_states[index] |= MAX6921[segment]
 
     # turn on boost converter, if off
     # boost.duty_u16(int(brightness * 65535))
@@ -100,56 +130,72 @@ def zfill(s, l):
     return s
 
 
-def time_to_display(datetime, c0=""):
+def time_to_display(datetime, d9=""):
     hour = zfill(str(datetime[3]), 2)
     minute = zfill(str(datetime[4]), 2)
     second = zfill(str(datetime[5]), 2)
     return (
-        c0,
-        "",
-        hour[0],
-        hour[1],
-        "-",
-        minute[0],
-        minute[1],
-        "-",
-        second[0],
         second[1],
+        second[0],
+        "-",
+        minute[1],
+        minute[0],
+        "-",
+        hour[1],
+        hour[0],
+        "",
+        d9,
     )
 
 
-def date_to_display(datetime, c0=""):
+def date_to_display(datetime, d9=""):
     year = zfill(str(datetime[0]), 4)
     month = zfill(str(datetime[1]), 2)
     date = zfill(str(datetime[1]), 2)
     return (
-        c0,
-        "",
-        year[0],
-        year[1],
-        year[2],
-        year[3] + ".",
-        month[0],
-        month[1] + ".",
-        date[0],
         date[1],
+        date[0],
+        month[1] + ".",
+        month[0],
+        year[3] + ".",
+        year[2],
+        year[1],
+        year[0],
+        "",
+        d9,
     )
 
 
+# define timed executions
+def check_time(_):
+    global mcp, clock_time, last_time
+    clock_time = mcp.time
+
+
+def update_display(_):
+    # send out data to the vfd controller
+    load.off()
+    shift.write(digit_states[digit].to_bytes(3, "big"))
+    load.on()
+    digit += 1
+
+    # iterate through digits
+    if digit >= len(digit_states):
+        digit = 0
+
+
+def update_switches(_):
+    global switches
+    for switch in switches:
+        switch.update()
+
+
+# setup times executions
+mcp_timer.init(period=10, mode=Timer.PERIODIC, callback=check_time)
+switch_timer.init(period=1, mode=Timer.PERIODIC, callback=update_switches)
+display_timer.init(period=10, mode=Timer.PERIODIC, callback=update_display)
+
 try:
-    # define timed executions
-    def update_switches(_):
-        global switches
-        for switch in switches:
-            switch.update()
-
-    def check_time(_):
-        global mcp, clock_time, last_time
-        clock_time = mcp.time
-
-    switch_timer.init(period=1, mode=Timer.PERIODIC, callback=update_switches)
-    mcp_timer.init(period=10, mode=Timer.PERIODIC, callback=check_time)
-
     # main loop
     while True:
         # mode selector
@@ -160,10 +206,10 @@ try:
             print("pressed switch 2")
             if mode == TIME:
                 mode = DATE
-                update_display(*date_to_display(clock_time))
+                set_display(*date_to_display(clock_time))
             elif mode == DATE:
                 mode = TIME
-                update_display(*time_to_display(clock_time))
+                set_display(*time_to_display(clock_time))
 
         # switch 2
         if not values[2] and switch_states[2]:
@@ -183,13 +229,23 @@ try:
         if clock_time != last_time:
             last_time = clock_time
             if mode == TIME:
-                update_display(*time_to_display(clock_time))
+                set_display(*time_to_display(clock_time))
             elif mode == DATE:
-                update_display(*date_to_display(clock_time))
+                set_display(*date_to_display(clock_time))
 
 
 except KeyboardInterrupt:
     print("exiting...")
+
     switch_timer.deinit()
     mcp_timer.deinit()
+    display_timer.deinit()
+
+    raise SystemExit
+
+except Exception:
+    switch_timer.deinit()
+    mcp_timer.deinit()
+    display_timer.deinit()
+
     raise SystemExit
