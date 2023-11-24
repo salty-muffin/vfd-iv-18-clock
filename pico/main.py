@@ -52,6 +52,7 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 i2c = SoftI2C(sda=Pin(21), scl=Pin(20))
 mcp = mcp7940.MCP7940(i2c)
 mcp.start()
+mcp.battery_backup_enable(1)
 
 # setup MAX6921 shift register
 shift = SPI(0, baudrate=1000000, sck=Pin(6), mosi=Pin(7), miso=Pin(4))
@@ -59,7 +60,7 @@ load = Pin(8, Pin.OUT, value=1)
 blank = Pin(9, Pin.OUT)
 
 # set time
-mcp.time = time.localtime()
+# mcp.time = time.localtime()
 
 # global variables
 clock_time = mcp.time
@@ -165,7 +166,7 @@ def date_to_display(datetime, d8=""):
 
 # define timed executions
 def check_time(_):
-    global mcp, clock_time, last_time
+    global mcp, clock_time
     clock_time = mcp.time
 
 
@@ -192,20 +193,53 @@ def update_switches(_):
 # setup times executions
 mcp_timer.init(period=10, mode=Timer.PERIODIC, callback=check_time)
 switch_timer.init(period=1, mode=Timer.PERIODIC, callback=update_switches)
-# display_timer.init(period=10, mode=Timer.PERIODIC, callback=update_display)
+display_timer.init(freq=2000, mode=Timer.PERIODIC, callback=update_display)
 
 try:
-    boost.duty_u16(int(brightness * 65535))
+    # set display to show time in the beginning
+    set_display(*time_to_display(clock_time))
+
     # main loop
     while True:
-        set_display(*date_to_display(clock_time))
-        time.sleep(1)
+        # mode selector
+        values = [switches[i].value() for i in range(3)]
+        # switch 1
+        if not values[0] and switch_states[0]:
+            # time / date
+            print("pressed switch 1")
+        # switch 2
+        if not values[1] and switch_states[1]:
+            # time / date
+            print("pressed switch 2")
+            if mode == TIME:
+                mode = DATE
+                set_display(*date_to_display(clock_time))
+            elif mode == DATE:
+                mode = TIME
+                set_display(*time_to_display(clock_time))
 
-        load.off()
-        shift.write(digit_states[0].to_bytes(3, "big"))
-        load.on()
+        # switch 3
+        if not values[2] and switch_states[2]:
+            # on / off
+            print("pressed switch 3")
+            if mode == TIME or mode == DATE:
+                mode = OFF
+                turn_off_display()
+            elif mode == OFF:
+                mode = TIME
+                set_display(*time_to_display(clock_time))
 
-        time.sleep(1000)
+        # set switch states (so they only trigger once per press)
+        for i in range(3):
+            switch_states[i] = values[i]
+
+        # update display
+        if clock_time != last_time:
+            last_time = clock_time
+            if mode == TIME:
+                set_display(*time_to_display(clock_time))
+            elif mode == DATE:
+                set_display(*date_to_display(clock_time))
 
 
 except KeyboardInterrupt:
@@ -215,7 +249,9 @@ except KeyboardInterrupt:
 
     switch_timer.deinit()
     mcp_timer.deinit()
-    # display_timer.deinit()
+    display_timer.deinit()
+
+    filament.off()
 
     raise SystemExit
 
@@ -224,6 +260,8 @@ except Exception as ex:
 
     switch_timer.deinit()
     mcp_timer.deinit()
-    # display_timer.deinit()
+    display_timer.deinit()
+
+    filament.off()
 
     raise ex
