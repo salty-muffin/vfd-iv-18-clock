@@ -570,6 +570,10 @@
       {
         "netclass": "Low Impedance",
         "pattern": "*GATE"
+      },
+      {
+        "netclass": "5/12V",
+        "pattern": "Net-(F1*)"
       }
     ]
   },

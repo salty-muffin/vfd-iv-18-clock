@@ -94,7 +94,7 @@ mcp.battery_backup_enable(1)
 # setup MAX6921 shift register
 shift = SPI(0, baudrate=1000000, sck=Pin(6), mosi=Pin(7), miso=Pin(4))
 load = Pin(8, Pin.OUT, value=1)
-blank = Pin(9, Pin.OUT)
+blank = Pin(9, Pin.OUT, value=1)
 
 
 # global variables
@@ -222,7 +222,10 @@ try:
         # get current ticks
         current_ticks = time.ticks_us()
 
-        if time.ticks_diff(current_ticks, last_display_update) >= DISPLAY_INTERVAL:
+        if (
+            time.ticks_diff(current_ticks, last_display_update) >= DISPLAY_INTERVAL
+            and mode != OFF
+        ):
             blank.on()
             load.off()
             shift.write(digit_states[digit].to_bytes(3, "big"))
