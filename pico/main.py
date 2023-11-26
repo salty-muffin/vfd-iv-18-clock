@@ -3,7 +3,7 @@ import os
 import time
 import machine
 from machine import Pin, PWM, I2C, SPI
-import mcp7940
+from mcp7940 import MCP7940
 from debouncer import Debouncer
 
 # set overclock frequency
@@ -87,7 +87,7 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 
 # setup rtc
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
-mcp = mcp7940.MCP7940(i2c)
+mcp = MCP7940(i2c)
 # mcp.time = time.localtime()
 mcp.start()
 mcp.battery_backup_enable(1)
@@ -158,13 +158,6 @@ def date_to_display(datetime, d8=""):
     )
 
 
-def is_leap_year(year):
-    """https://stackoverflow.com/questions/725098/leap-year-calculation"""
-    if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:
-        return True
-    return False
-
-
 def validate_datetime(datetime):
     year = datetime[0]
     month = datetime[1]
@@ -172,12 +165,17 @@ def validate_datetime(datetime):
 
     if (month < 8 and month % 2 == 0 or month >= 8 and month % 2 == 1) and day > 30:
         day = 30
-    if is_leap_year(year):
+    if MCP7940.is_leap_year(year):
         if day > 29:
             day = 29
     else:
         if day > 28:
             day = 28
+
+    if month < 1:
+        month = 1
+    elif month > 12:
+        month = 12
 
     return (
         year,
@@ -193,6 +191,9 @@ def validate_datetime(datetime):
 
 # global variables
 clock_time = mcp.time
+if clock_time != validate_datetime(clock_time):
+    clock_time = validate_datetime(clock_time)
+    mcp.time = clock_time
 last_time = clock_time
 set_time = list(clock_time)
 
