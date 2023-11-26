@@ -243,6 +243,7 @@ clock_time = mcp.time
 if clock_time != validate_datetime(clock_time):
     clock_time = validate_datetime(clock_time)
     mcp.time = clock_time
+    mcp.battery_backup_enable(1)
 last_time = clock_time
 set_time = list(clock_time)
 
@@ -325,6 +326,7 @@ try:
                     clock_time = tuple(set_time)
                     mcp.time = clock_time
                     last_time = clock_time
+                    mcp.battery_backup_enable(1)
                     mcp.start()
                     set_display(
                         *date_to_display(
@@ -360,6 +362,7 @@ try:
                     last_time = clock_time
                     with open("brightness.txt", "w") as file:
                         file.write(str(brightness))
+                    mcp.battery_backup_enable(1)
                     mcp.start()
                     set_display(*time_to_display(set_time))
 
