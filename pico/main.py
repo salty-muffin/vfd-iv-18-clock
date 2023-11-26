@@ -447,14 +447,12 @@ try:
             pass
 
 
-except KeyboardInterrupt:
+except (KeyboardInterrupt, SystemExit):
     print("exiting...")
 
     boost.duty_u16(0)
 
     filament.off()
-
-    raise SystemExit
 
 except Exception as ex:
     boost.duty_u16(0)
