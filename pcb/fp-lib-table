@@ -3,5 +3,4 @@
   (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/lib/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
   (lib (name "Panelization")(type "KiCad")(uri "${KIPRJMOD}/lib/Panelization.pretty")(options "")(descr ""))
   (lib (name "vfd")(type "KiCad")(uri "${KIPRJMOD}/lib/vfd.pretty")(options "")(descr ""))
-  (lib (name "Nixie")(type "KiCad")(uri "/home/bird/git/nixie-clock-n-8/kicad/Nixie.pretty")(options "")(descr ""))
 )
