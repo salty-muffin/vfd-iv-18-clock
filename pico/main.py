@@ -1,4 +1,5 @@
 from micropython import const
+import os
 import time
 import machine
 from machine import Pin, Timer, PWM, I2C, SPI
@@ -9,7 +10,7 @@ from debouncer import Debouncer
 machine.freq(270000000)
 
 # constants
-TIME, DATE, OFF, SET_HOUR, SET_MINUTE, SET_DAY, SET_MONTH, SET_YEAR, SET_BRIGHTNESS = (
+OFF, TIME, DATE, SET_HOUR, SET_MINUTE, SET_DAY, SET_MONTH, SET_YEAR, SET_BRIGHTNESS = (
     const(0),
     const(1),
     const(2),
@@ -97,28 +98,9 @@ load = Pin(8, Pin.OUT, value=1)
 blank = Pin(9, Pin.OUT, value=1)
 
 
-# global variables
-clock_time = mcp.time
-last_time = clock_time
-set_time = list(clock_time)
-mode = TIME
-digit = 0  # 0 - 8
-digit_states = [0] * 9
-brightness = 0.6  # 60 - 76 %
-try:
-    with open("brightness.txt") as file:
-        brightness = float(file.read())
-except Exception:
-    print("no brightness file was found. using deafult brightness of 0.6")
-
-last_time_check = time.ticks_us()
-last_switch_check = time.ticks_us()
-last_display_update = time.ticks_us()
-
-
 # functions
 def set_display(d0, d1, d2, d3, d4, d5, d6, d7, d8):
-    global brightness, boost, digit_states, filament
+    global digit_states
 
     # set each digit
     for index, digit in enumerate([d0, d1, d2, d3, d4, d5, d6, d7, d8]):
@@ -136,8 +118,6 @@ def set_display(d0, d1, d2, d3, d4, d5, d6, d7, d8):
 
 
 def turn_off_display():
-    global boost, blank, filament
-
     # turn off boost converter
     boost.duty_u16(0)
 
@@ -211,6 +191,28 @@ def validate_datetime(datetime):
     )
 
 
+# global variables
+clock_time = mcp.time
+last_time = clock_time
+set_time = list(clock_time)
+
+mode = TIME
+
+digit = 0  # 0 - 8
+digit_states = [0] * 9
+
+brightness = 0.6  # 50 - 76 %
+if "brightness.txt" in os.listdir():
+    with open("brightness.txt") as file:
+        brightness = float(file.read())
+else:
+    print("no brightness file was found. using default brightness of 0.6")
+
+last_time_check = time.ticks_us()
+last_switch_check = time.ticks_us()
+last_display_update = time.ticks_us()
+
+
 try:
     # set display to show time in the beginning
     set_display(*time_to_display(clock_time))
@@ -236,10 +238,10 @@ try:
 
             last_display_update = current_ticks
 
-            # print(f"d: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
         # update time & set display accordingly
         if time.ticks_diff(current_ticks, last_time_check) >= TIME_CHECK_INTERVAL:
+            last_time_check = current_ticks
+
             clock_time = mcp.time
 
             if clock_time != last_time:
@@ -249,16 +251,12 @@ try:
                 elif mode == DATE:
                     set_display(*date_to_display(clock_time))
 
-            last_time_check = current_ticks
-
-            # print(f"c: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
         # update debounced switches
         if time.ticks_diff(current_ticks, last_switch_check) >= SWITCH_CHECK_INTERVAL:
+            last_switch_check = current_ticks
+
             for switch in switches:
                 switch.update()
-
-            last_switch_check = current_ticks
 
             # mode selector
             values = [switches[i].value() for i in range(3)]
@@ -445,14 +443,8 @@ try:
             for i in range(3):
                 switch_states[i] = values[i]
 
-            # print(f"s: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
-        # print(f"l: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
         while time.ticks_diff(time.ticks_us(), start_ticks_us) < DISPLAY_INTERVAL:
             pass
-
-        # print(f"L: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
 
 
 except KeyboardInterrupt:
