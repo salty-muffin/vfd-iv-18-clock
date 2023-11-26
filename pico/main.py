@@ -90,9 +90,6 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
 mcp = MCP7940(i2c)
 # mcp.time = time.localtime()
-mcp.start()
-print(mcp.is_battery_backup_enabled())
-mcp.battery_backup_enable(1)
 
 # setup MAX6921 shift register
 shift = SPI(0, baudrate=1000000, sck=Pin(6), mosi=Pin(7), miso=Pin(4))
@@ -244,6 +241,8 @@ if clock_time != validate_datetime(clock_time):
     clock_time = validate_datetime(clock_time)
     mcp.time = clock_time
     mcp.battery_backup_enable(1)
+mcp.battery_backup_enable(1)
+mcp.start()
 last_time = clock_time
 set_time = list(clock_time)
 
