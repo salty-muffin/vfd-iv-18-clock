@@ -222,10 +222,7 @@ try:
         # get current ticks
         current_ticks = time.ticks_us()
 
-        if (
-            time.ticks_diff(current_ticks, last_display_update) >= DISPLAY_INTERVAL
-            and mode != OFF
-        ):
+        if mode != OFF:
             blank.on()
             load.off()
             shift.write(digit_states[digit].to_bytes(3, "big"))
@@ -453,7 +450,7 @@ try:
         # print(f"l: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
 
         while time.ticks_diff(time.ticks_us(), start_ticks_us) < DISPLAY_INTERVAL:
-            time.sleep_us(0)
+            pass
 
         # print(f"L: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
 
