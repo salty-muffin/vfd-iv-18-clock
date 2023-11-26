@@ -210,7 +210,6 @@ else:
 
 last_time_check = time.ticks_us()
 last_switch_check = time.ticks_us()
-last_display_update = time.ticks_us()
 
 
 try:
@@ -235,8 +234,6 @@ try:
             # iterate through digits
             if digit >= len(digit_states):
                 digit = 0
-
-            last_display_update = current_ticks
 
         # update time & set display accordingly
         if time.ticks_diff(current_ticks, last_time_check) >= TIME_CHECK_INTERVAL:
