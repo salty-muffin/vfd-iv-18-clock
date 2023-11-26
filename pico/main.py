@@ -4,11 +4,11 @@ import time
 import _thread as thread
 import machine
 from machine import Pin, PWM, I2C, SPI
-import mcp7940
+from mcp7940 import MCP7940
 from debouncer import Debouncer
 
 # set overclock frequency
-# machine.freq(270000000)
+machine.freq(270000000)
 
 # constants
 OFF, TIME, DATE, SET_HOUR, SET_MINUTE, SET_DAY, SET_MONTH, SET_YEAR, SET_BRIGHTNESS = (
@@ -88,9 +88,10 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 
 # setup rtc
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
-mcp = mcp7940.MCP7940(i2c)
+mcp = MCP7940(i2c)
 # mcp.time = time.localtime()
 mcp.start()
+print(mcp.is_battery_backup_enabled())
 mcp.battery_backup_enable(1)
 
 # setup MAX6921 shift register
@@ -169,13 +170,6 @@ def date_to_display(datetime, d8=""):
     )
 
 
-def is_leap_year(year):
-    """https://stackoverflow.com/questions/725098/leap-year-calculation"""
-    if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:
-        return True
-    return False
-
-
 def validate_datetime(datetime):
     year = datetime[0]
     month = datetime[1]
@@ -183,7 +177,7 @@ def validate_datetime(datetime):
 
     if (month < 8 and month % 2 == 0 or month >= 8 and month % 2 == 1) and day > 30:
         day = 30
-    if is_leap_year(year):
+    if MCP7940.is_leap_year(year):
         if day > 29:
             day = 29
     else:
@@ -203,43 +197,38 @@ def validate_datetime(datetime):
 
 
 def update_display():
+    global digit, last_display_update, last_mode, last_digit_states
+
     try:
-        global digit, last_display_update, last_mode, last_digit_states
+        while True:
+            current_ticks = time.ticks_us()
 
-        current_ticks = time.ticks_us()
+            if time.ticks_diff(current_ticks, last_display_update) > DISPLAY_INTERVAL:
+                last_display_update = current_ticks
 
-        if time.ticks_diff(current_ticks, last_display_update) > DISPLAY_INTERVAL:
-            last_display_update = current_ticks
+                if lock.acquire(0):
+                    current_mode = mode
+                    last_mode = mode
 
-            if lock.acquire(0):
-                current_mode = mode
-                last_mode = mode
+                    current_digit_states = digit_states
+                    last_digit_states = digit_states
 
-                current_digit_states = digit_states
-                last_digit_states = digit_states
+                    lock.release()
+                else:
+                    current_mode = last_mode
+                    current_digit_states = last_digit_states
 
-                lock.release()
-            else:
-                current_mode = last_mode
-                current_digit_states = last_digit_states
+                if current_mode != OFF:
+                    blank.on()
+                    load.off()
+                    shift.write(current_digit_states[digit].to_bytes(3, "big"))
+                    load.on()
+                    blank.off()
+                    digit += 1
 
-            if current_mode != OFF:
-                blank.on()
-                load.off()
-                shift.write(current_digit_states[digit].to_bytes(3, "big"))
-                load.on()
-                blank.off()
-                digit += 1
-
-                # iterate through digits
-                if digit >= len(current_digit_states):
-                    digit = 0
-
-            # debug
-            debug_ticks = time.ticks_us()
-            print(
-                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}"
-            )
+                    # iterate through digits
+                    if digit >= len(current_digit_states):
+                        digit = 0
     except:
         thread.exit()
 
@@ -286,6 +275,7 @@ try:
 
         # update time & set display accordingly
         if time.ticks_diff(current_ticks, last_time_check) >= TIME_CHECK_INTERVAL:
+            # debug
             last_time_check = current_ticks
 
             clock_time = mcp.time
@@ -296,12 +286,6 @@ try:
                     set_display(*time_to_display(clock_time))
                 elif mode == DATE:
                     set_display(*date_to_display(clock_time))
-
-            # debug
-            debug_ticks = time.ticks_us()
-            print(
-                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}\t\trtc"
-            )
 
         # update debounced switches
         if time.ticks_diff(current_ticks, last_switch_check) >= SWITCH_CHECK_INTERVAL:
@@ -494,12 +478,6 @@ try:
             # set switch states (so they only trigger once per press)
             for i in range(3):
                 switch_states[i] = values[i]
-
-            # debug
-            debug_ticks = time.ticks_us()
-            print(
-                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}\t\tswitches"
-            )
 
 
 except (KeyboardInterrupt, SystemExit):
