@@ -184,6 +184,11 @@ def validate_datetime(datetime):
         if day > 28:
             day = 28
 
+    if month < 1:
+        month = 1
+    elif month > 12:
+        month = 12
+
     return (
         year,
         month,
@@ -235,6 +240,9 @@ def update_display():
 
 # global variables
 clock_time = mcp.time
+if clock_time != validate_datetime(clock_time):
+    clock_time = validate_datetime(clock_time)
+    mcp.time = clock_time
 last_time = clock_time
 set_time = list(clock_time)
 
