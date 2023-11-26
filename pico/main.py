@@ -100,7 +100,7 @@ blank = Pin(9, Pin.OUT, value=1)
 # global variables
 clock_time = mcp.time
 last_time = clock_time
-set_time = clock_time
+set_time = list(clock_time)
 mode = TIME
 digit = 0  # 0 - 8
 digit_states = [0] * 9
