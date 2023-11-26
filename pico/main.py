@@ -1,15 +1,17 @@
 from micropython import const
+import os
 import time
+import _thread as thread
 import machine
-from machine import Pin, Timer, PWM, I2C, SPI
+from machine import Pin, PWM, I2C, SPI
 import mcp7940
 from debouncer import Debouncer
 
 # set overclock frequency
-machine.freq(270000000)
+# machine.freq(270000000)
 
 # constants
-TIME, DATE, OFF, SET_HOUR, SET_MINUTE, SET_DAY, SET_MONTH, SET_YEAR, SET_BRIGHTNESS = (
+OFF, TIME, DATE, SET_HOUR, SET_MINUTE, SET_DAY, SET_MONTH, SET_YEAR, SET_BRIGHTNESS = (
     const(0),
     const(1),
     const(2),
@@ -97,35 +99,18 @@ load = Pin(8, Pin.OUT, value=1)
 blank = Pin(9, Pin.OUT, value=1)
 
 
-# global variables
-clock_time = mcp.time
-last_time = clock_time
-set_time = list(clock_time)
-mode = TIME
-digit = 0  # 0 - 8
-digit_states = [0] * 9
-brightness = 0.6  # 60 - 76 %
-try:
-    with open("brightness.txt") as file:
-        brightness = float(file.read())
-except Exception:
-    print("no brightness file was found. using deafult brightness of 0.6")
-
-last_time_check = time.ticks_us()
-last_switch_check = time.ticks_us()
-last_display_update = time.ticks_us()
-
-
 # functions
 def set_display(d0, d1, d2, d3, d4, d5, d6, d7, d8):
-    global brightness, boost, digit_states, filament
+    global digit_states
 
     # set each digit
+    lock.acquire()
     for index, digit in enumerate([d0, d1, d2, d3, d4, d5, d6, d7, d8]):
         digit_states[index] = MAX6921[f"D{index + 1}"]
         for character in digit:
             for segment in CHARACTERS[character]:
                 digit_states[index] |= MAX6921[segment]
+    lock.release()
 
     # turn on boost converter & filament, if off
     boost.duty_u16(int(brightness * 65535))
@@ -135,9 +120,15 @@ def set_display(d0, d1, d2, d3, d4, d5, d6, d7, d8):
     blank.off()
 
 
-def turn_off_display():
-    global boost, blank, filament
+def set_mode(m):
+    global mode
 
+    lock.acquire()
+    mode = m
+    lock.release()
+
+
+def turn_off_display():
     # turn off boost converter
     boost.duty_u16(0)
 
@@ -211,6 +202,77 @@ def validate_datetime(datetime):
     )
 
 
+def update_display():
+    try:
+        global digit, last_display_update, last_mode, last_digit_states
+
+        current_ticks = time.ticks_us()
+
+        if time.ticks_diff(current_ticks, last_display_update) > DISPLAY_INTERVAL:
+            last_display_update = current_ticks
+
+            if lock.acquire(0):
+                current_mode = mode
+                last_mode = mode
+
+                current_digit_states = digit_states
+                last_digit_states = digit_states
+
+                lock.release()
+            else:
+                current_mode = last_mode
+                current_digit_states = last_digit_states
+
+            if current_mode != OFF:
+                blank.on()
+                load.off()
+                shift.write(current_digit_states[digit].to_bytes(3, "big"))
+                load.on()
+                blank.off()
+                digit += 1
+
+                # iterate through digits
+                if digit >= len(current_digit_states):
+                    digit = 0
+
+            # debug
+            debug_ticks = time.ticks_us()
+            print(
+                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}"
+            )
+    except:
+        thread.exit()
+
+
+# global variables
+clock_time = mcp.time
+last_time = clock_time
+set_time = list(clock_time)
+
+mode = TIME
+last_mode = mode
+
+digit = 0  # 0 - 8
+digit_states = [0] * 9
+last_digit_states = digit_states
+
+brightness = 0.6  # 60 - 76 %
+if "brightness.txt" in os.listdir():
+    with open("brightness.txt") as file:
+        brightness = float(file.read())
+else:
+    print("no brightness file was found. using default brightness of 0.6")
+
+last_time_check = time.ticks_us()
+last_switch_check = time.ticks_us()
+last_display_update = time.ticks_us()
+
+# create a global lock
+lock = thread.allocate_lock()
+
+# start display update thread
+update_display_thread = thread.start_new_thread(update_display, ())
+
 try:
     # set display to show time in the beginning
     set_display(*time_to_display(clock_time))
@@ -222,24 +284,10 @@ try:
         # get current ticks
         current_ticks = time.ticks_us()
 
-        if mode != OFF:
-            blank.on()
-            load.off()
-            shift.write(digit_states[digit].to_bytes(3, "big"))
-            load.on()
-            blank.off()
-            digit += 1
-
-            # iterate through digits
-            if digit >= len(digit_states):
-                digit = 0
-
-            last_display_update = current_ticks
-
-            # print(f"d: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
         # update time & set display accordingly
         if time.ticks_diff(current_ticks, last_time_check) >= TIME_CHECK_INTERVAL:
+            last_time_check = current_ticks
+
             clock_time = mcp.time
 
             if clock_time != last_time:
@@ -249,16 +297,18 @@ try:
                 elif mode == DATE:
                     set_display(*date_to_display(clock_time))
 
-            last_time_check = current_ticks
-
-            # print(f"c: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
+            # debug
+            debug_ticks = time.ticks_us()
+            print(
+                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}\t\trtc"
+            )
 
         # update debounced switches
         if time.ticks_diff(current_ticks, last_switch_check) >= SWITCH_CHECK_INTERVAL:
+            last_switch_check = current_ticks
+
             for switch in switches:
                 switch.update()
-
-            last_switch_check = current_ticks
 
             # mode selector
             values = [switches[i].value() for i in range(3)]
@@ -267,19 +317,19 @@ try:
             if not values[0] and switch_states[0]:
                 # set time / date / brighness
                 if mode == TIME or mode == DATE:
-                    mode = SET_HOUR
+                    set_mode(SET_HOUR)
                     set_time = list(clock_time)
                     set_time[5] = 0
                     set_display(
                         *time_to_display((None, None, None, set_time[3], None, 0), ".")
                     )
                 elif mode == SET_HOUR:
-                    mode = SET_MINUTE
+                    set_mode(SET_MINUTE)
                     set_display(
                         *time_to_display((None, None, None, None, set_time[4], 0), ".")
                     )
                 elif mode == SET_MINUTE:
-                    mode = SET_DAY
+                    set_mode(SET_DAY)
                     clock_time = tuple(set_time)
                     mcp.time = clock_time
                     last_time = clock_time
@@ -290,28 +340,28 @@ try:
                         )
                     )
                 elif mode == SET_DAY:
-                    mode = SET_MONTH
+                    set_mode(SET_MONTH)
                     set_display(
                         *date_to_display(
                             (None, set_time[1], None, None, None, None), "."
                         )
                     )
                 elif mode == SET_MONTH:
-                    mode = SET_YEAR
+                    set_mode(SET_YEAR)
                     set_display(
                         *date_to_display(
                             (set_time[0], None, None, None, None, None), "."
                         )
                     )
                 elif mode == SET_YEAR:
-                    mode = SET_BRIGHTNESS
+                    set_mode(SET_BRIGHTNESS)
                     set_display(
                         *time_to_display(
                             (None, None, None, None, None, int(brightness * 100)), "."
                         )
                     )
                 elif mode == SET_BRIGHTNESS:
-                    mode = TIME
+                    set_mode(TIME)
                     set_time[3:6] = clock_time[3:6]
                     clock_time = validate_datetime(set_time)
                     mcp.time = clock_time
@@ -325,10 +375,10 @@ try:
             if not values[1] and switch_states[1]:
                 # time / date
                 if mode == TIME:
-                    mode = DATE
+                    set_mode(DATE)
                     set_display(*date_to_display(clock_time))
                 elif mode == DATE:
-                    mode = TIME
+                    set_mode(TIME)
                     set_display(*time_to_display(clock_time))
                 elif mode == SET_HOUR:
                     set_time[3] += 1
@@ -385,10 +435,10 @@ try:
             if not values[2] and switch_states[2]:
                 # on / off
                 if mode == TIME or mode == DATE:
-                    mode = OFF
+                    set_mode(OFF)
                     turn_off_display()
                 elif mode == OFF:
-                    mode = TIME
+                    set_mode(TIME)
                     set_display(*time_to_display(clock_time))
                 elif mode == SET_HOUR:
                     set_time[3] -= 1
@@ -445,24 +495,19 @@ try:
             for i in range(3):
                 switch_states[i] = values[i]
 
-            # print(f"s: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
-        # print(f"l: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
-
-        while time.ticks_diff(time.ticks_us(), start_ticks_us) < DISPLAY_INTERVAL:
-            pass
-
-        # print(f"L: {time.ticks_diff(time.ticks_us(), start_ticks_us)}")
+            # debug
+            debug_ticks = time.ticks_us()
+            print(
+                f"loop: {debug_ticks}\t\texec: {time.ticks_diff(debug_ticks, current_ticks)}\t\tswitches"
+            )
 
 
-except KeyboardInterrupt:
+except (KeyboardInterrupt, SystemExit):
     print("exiting...")
 
     boost.duty_u16(0)
 
     filament.off()
-
-    raise SystemExit
 
 except Exception as ex:
     boost.duty_u16(0)
