@@ -256,7 +256,7 @@ digit = 0  # 0 - 8
 digit_states = [0] * 9
 last_digit_states = digit_states
 
-brightness = 0.6  # 60 - 76 %
+brightness = 0.6  # 50 - 76 %
 if "brightness.txt" in os.listdir():
     with open("brightness.txt") as file:
         brightness = float(file.read())
