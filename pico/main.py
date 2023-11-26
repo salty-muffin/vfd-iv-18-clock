@@ -2,7 +2,7 @@ from micropython import const
 import os
 import time
 import machine
-from machine import Pin, Timer, PWM, I2C, SPI
+from machine import Pin, PWM, I2C, SPI
 import mcp7940
 from debouncer import Debouncer
 
