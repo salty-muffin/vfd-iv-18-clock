@@ -240,7 +240,6 @@ clock_time = mcp.time
 if clock_time != validate_datetime(clock_time):
     clock_time = validate_datetime(clock_time)
     mcp.time = clock_time
-    mcp.battery_backup_enable(1)
 mcp.battery_backup_enable(1)
 mcp.start()
 last_time = clock_time
@@ -283,7 +282,6 @@ try:
 
         # update time & set display accordingly
         if time.ticks_diff(current_ticks, last_time_check) >= TIME_CHECK_INTERVAL:
-            # debug
             last_time_check = current_ticks
 
             clock_time = mcp.time
