@@ -88,7 +88,7 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 
 # setup rtc
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
-mcp = MCP7940(i2c)
+mcp = MCP7940(i2c, battery_enabled=True)
 # mcp.time = time.localtime()
 
 # setup MAX6921 shift register
@@ -240,7 +240,6 @@ clock_time = mcp.time
 if clock_time != validate_datetime(clock_time):
     clock_time = validate_datetime(clock_time)
     mcp.time = clock_time
-mcp.battery_backup_enable(1)
 mcp.start()
 last_time = clock_time
 set_time = list(clock_time)
@@ -323,8 +322,6 @@ try:
                     clock_time = tuple(set_time)
                     mcp.time = clock_time
                     last_time = clock_time
-                    mcp.battery_backup_enable(1)
-                    mcp.start()
                     set_display(
                         *date_to_display(
                             (None, None, set_time[2], None, None, None), "."
@@ -359,8 +356,6 @@ try:
                     last_time = clock_time
                     with open("brightness.txt", "w") as file:
                         file.write(str(brightness))
-                    mcp.battery_backup_enable(1)
-                    mcp.start()
                     set_display(*time_to_display(set_time))
 
             # switch 2 (middle)
