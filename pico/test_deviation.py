@@ -4,9 +4,16 @@ import time
 
 FILENAME = "calibration.txt"
 
+# setup led
+led = Pin("LED", Pin.OUT, value=0)
+
 # setup rtc
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
 mcp = MCP7940(i2c)
+
+# SET THE TRIM
+# mcp.set_trim(-127)
+mcp.set_trim(-29)
 
 
 def time_diff_seconds(datetime1, datetime2):
@@ -27,7 +34,7 @@ last_time = local_time
 
 local_sec = time_diff_seconds(local_time, start_time)
 rtc_sec = time_diff_seconds(rtc_time, start_time)
-printout = f"START - sec rtc: {local_sec}, sec local: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}"
+printout = f"START - sec local: {local_sec}, sec rtc: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}, trim: {mcp.get_trim()}"
 print(printout)
 with open(FILENAME, "w") as file:
     file.write(f"{printout}\n")
@@ -43,12 +50,15 @@ try:
 
             local_sec = time_diff_seconds(local_time, start_time)
             rtc_sec = time_diff_seconds(rtc_time, start_time)
-            ppm = (rtc_sec - local_sec) / local_sec * 1000000
+            ppm = (local_sec - rtc_sec) / local_sec * 1000000
             trimval = ppm * (32768 * 60) / (1000000 * 2)
-            printout = f"sec rtc: {local_sec}, sec local: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}, ppm: {ppm}, trimval: {trimval}"
+            printout = f"sec local: {local_sec}, sec rtc: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}, ppm: {ppm}, trimval: {trimval}"
             print(printout)
             with open(FILENAME, "a") as file:
                 file.write(f"{printout}\n")
+
+            if ppm != 0:
+                led.on()
 
         time.sleep_ms(1)
 except KeyboardInterrupt:
