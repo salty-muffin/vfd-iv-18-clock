@@ -1,4 +1,4 @@
-from machine import Pin, PWM, I2C, SPI
+from machine import Pin, I2C
 from mcp7940 import MCP7940
 import time
 
