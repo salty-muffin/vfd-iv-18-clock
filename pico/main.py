@@ -89,6 +89,8 @@ boost = PWM(Pin(17, Pin.OUT), freq=625000, duty_u16=0)
 # setup rtc
 i2c = I2C(0, sda=Pin(20), scl=Pin(21), freq=2000000)
 mcp = MCP7940(i2c, battery_enabled=True)
+# set trim
+mcp.set_trim(-46)
 # mcp.time = time.localtime()
 
 # setup MAX6921 shift register

@@ -40,10 +40,10 @@ try:
         # set trim
         mcp.set_trim(trim)
 
+        last_time = local_time
+
         # start rtc
         mcp.start()
-
-        last_time = local_time
 
         local_sec = time_diff_seconds(local_time, start_time)
         rtc_sec = time_diff_seconds(rtc_time, start_time)
@@ -52,6 +52,8 @@ try:
         )
 
         ppm = 0
+        first = True
+        offset = 0
         while ppm == 0:
             local_time = time.localtime()
 
@@ -63,16 +65,20 @@ try:
 
                 local_sec = time_diff_seconds(local_time, start_time)
                 rtc_sec = time_diff_seconds(rtc_time, start_time)
-                ppm = (local_sec - rtc_sec) / local_sec * 1000000
+                if first:
+                    offset = rtc_sec - local_sec
+                    first = False
+
+                ppm = (local_sec - rtc_sec + offset) / local_sec * 1000000
                 trimval = ppm * (32768 * 60) / (1000000 * 2)
                 print(
-                    f"sec local: {local_sec}, sec rtc: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}, ppm: {ppm}, trimval: {trimval}, trim: {trim}"
+                    f"sec local: {local_sec}, sec rtc: {rtc_sec}, delta (rtc_sec - local_sec): {rtc_sec - local_sec}, ppm: {ppm}, trimval: {trimval}, offset: {offset}, trim: {trim}"
                 )
 
             time.sleep_ms(1)
 
         trim += resolution if ppm > 0 else -resolution
-        resolution = int(resolution / 2)
+        resolution = clamp(int(resolution / 2), 1, 127)
         if trim < -127 or trim > 127:
             led.on()
             trim = clamp(trim, -127, 127)
